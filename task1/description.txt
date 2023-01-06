@@ -1,0 +1,69 @@
+TASK DESCRIPTION:
+According to the World Health Organization, air pollution is a major environmental health issue. Both short- and long-term exposure to polluted air increases the risk of heart and respiratory diseases. Hence, reducing the concentration of particulate matter (PM) in the air is an important task.
+
+You are commissioned to help a city predict and audit the concentration of fine particulate matter (PM2.5) per cubic meter of air. In an initial phase, the city has collected preliminary measurements using mobile measurement stations. The goal is now to develop a pollution model that can predict the air pollution concentration in locations without measurements. This model will then be used to determine particularly polluted areas where permanent measurement stations should be deployed
+
+A pervasive class of models for weather and meteorology data are Gaussian Processes (GPs). In the following task, you will use Gaussian Process regression in order to model air pollution and try to predict the concentration of PM2.5 at previously unmeasured locations.
+
+CHALLENGES:
+We envisage that you need to overcome three challenges in order to solve this task - each requiring a specific strategy.
+
+1. Model selection: You will need to find the right kernel and its hyperparameters that model the data faithfully. With Bayesian models, a commonly used principle in choosing the right kernel or hyperparameters is to use the data likelihood, also known as the marginal likelihood. See more details here: Wikipedia.
+2. Large scale learning: GP inference grows computationally expensive for large datasets. In particular, posterior inference requires basic operations which becomes computationally infeasible for large datasets. Thus, you will have to mitigate computational issues. Practitioners often do so using forms of low-rank approximations. The most popular instances are the Nyström method, using random features, and clustering-based approaches. The following excellent review on Wikipedia can serve as an introduction: Wikipedia.
+3. Asymmetric cost: We use a specialized cost function that weights different kinds of errors differently. As a result, the mean prediction might not be optimal. Here, the mean prediction refers to the optimal decision with respect to a general squared loss and some posterior distribution over the true value to be predicted. Thus, you might need to develop a custom decision rule for your model.
+
+
+SOLUTION OF THE TASK 
+We solved this task using GPytorch. We first defined the “auxiliary” class ExactGPModel, in order to set up the model.
+(after trying all of them, we noticed that the best results were obtained using Matern(1/2)) and we defined the forward method.
+We had to choose the Mean, the kernel and the multivariatenormal distribution to initialize the model. From the GPytorch package we choosed the following one :
+
+	-Mean : ZeroMean()  (we set this value because it is often used as a convetion, as seen in the lessons)
+	-Kernel : Maternkernel(1/2) (after trying all of them, we noticed that this better results were obtained using Matern(1/2)) 
+	-Distribution : MultivariateNormal(mean, covar)
+
+Then, we defined the forward method.
+
+INITIALIZE MODEL AND LIKELIHOOD
+
+As said in the project description, in this framework a commonly used principle in choosing the kernel and hyper-parameters is to use the "data likelihood", otherwise known as the marginal likelihood to find the best model. 
+We followed this advice and, in the class Model, we initialized the self.likelihood as the Gaussian Likelihood (as proposed by GPytorch). 
+
+LARGE SCALE TRAINING
+
+Fortunately, with GPyTorch and the choice we made for the optimizer in the fit_model function (i.e. SGD) the computation time was quite reasonable (on my computer around a minute), so we decided to not implement this kind of methods.
+
+FIT/TRAIN THE MODEL
+
+To fit the model, we defined the model using our auxiliary class: self.model=ExactGPModel(train_x,train_y,self.likelihood) 
+Moreover, as we use GPyTorch we have ton use tensor instead of numpy array. This is why we transform our training set into Tensor.
+In order to well fiting our model we put the model in training mode to find the optimal hyperparameters. We did it using the pytorch function .train()
+
+Then we searched an adequate good optimizer. We tried the three following one :
+
+	-Adam optimizer
+	-SGD optimizer
+	-Adagrad optimizer
+
+After testing we choosed the SGD optimizer as it worked better with our model. We also tried different learning rate value (0.05, 0.01, 0.1, etc.) but the use of the ExponentialLR scheduler to adjust the learning rate based on the number of epochs gave the best results. 
+
+Then, we had to compute the MLL (marginal log likelihood). In GPyTorch there is the exact marginal log likelihood for an exact Gaussian process with a Gaussian Likelihood : gpytorch.mlls.ExactMarginalLogLikelihood. We decided to use that.
+We also defined the number of epochs for the training loop. We decided to set the value to 30, we tried different value (10, 20, 50, 100) but 30 seemed to us being the best compromise between performance and computation time. 
+Also we noticed that with a too high number of epochs there was the chance of overfitting the data so we tried to avoid it. 
+
+PREDICTION
+
+We defined the GP model such that it returns MultivariateNormal with its posterior mean and covariance.
+First, as for the training data, we converted our testing set into tensor.
+Then we needed to put both our model and likelihood into the eval mode (until now it was in training mode).
+Then, we could obtain the prediction by taking the mean of each normal distribution. (to do this we need to apply detach() and numpy() because results were given in torch format)
+But we have to keep in mind that, due to the fact that the cost function is asymmetric, the mean prediction might not be optimal.
+For this reason we made a correction of the predictions. First, we got the variance of each prediction using the same method as for the mean.
+The, we modified them in the cases that the asymmetric cost function hints. We set to 35.51 (given that the threshold is equal to 35.5) all the predictions which were between 35.5-2*GP_std and 35.5 and we decreased all the predictions which were >35.5 + GP_std by GP_std, in order to decrease our cost function. 
+
+RESULTS
+
+When running this code with the Docker we obtained 14.708 as result. The PUBLIC baseline is 29.202. Uploading our code and results we beat also the PRIVATE baseline (30.020). We obtained a score of 0.048, which is better than the PRIVATE baseline with a score of 17.917. 
+
+
+

@@ -1,0 +1,7 @@
+First, we defined the domain and the function and the constraints using GaussianProcessRegressor. We implemented next_recommendation such that it returns a random point in the domain
+if we have never evaluated the function or if we are stuck (the last N points are too close to the suggested point) and optimize_acquisition_function otherwise. To do so, we have defined 
+the functions get_distances and random_point_from_domain. We have defined constraint_function such that it returns the probability of the constraint being satisfied. We have defined 
+expected_improvement such that it returns the value of the expected improvement (to do so, we defined also get_best_value which returns the best "known" value of the acquisition function
+for which the probability that the constraint is satisfied is bigger than a threshold set by us). acquisition_function returns the product of constraint_function and expected_improvement.
+In add_data_point we add the data points and the values of the function and the constraint to previous_points and we fit both the function and the constraint considering these new points.
+Finally, in get_solution we return the minimal value of function we have found. 

@@ -3,12 +3,12 @@ This repository contains the solution to the projects I did for the ETH course "
 The topics are as follows:
 
 ## Project 1: Gaussian Processes
-<img align="right" height="140" src="https://github.com/riccardodesanti/probabilistic-AI/blob/main/images/GP_1.png](https://github.com/angelognazzo/Probabilistic-Artificial-Intelligence/blob/main/figures/GP_1.png"></img>
+<img align="right" height="140" src="https://github.com/angelognazzo/Probabilistic-Artificial-Intelligence/blob/main/figures/GP_1.png"></img>
 Implementation of a Gaussian Process regression. Then applied the model to an inference problem based on space data.
 <br/><br/>
 
 ## Project 2: Bayesian Neural Networks
-<img align="right" height="110" src="https://github.com/riccardodesanti/probabilistic-AI/blob/main/images/BNN_1.png](https://github.com/angelognazzo/Probabilistic-Artificial-Intelligence/blob/main/figures/BNN_1.png"></img>
+<img align="right" height="110" src="https://github.com/angelognazzo/Probabilistic-Artificial-Intelligence/blob/main/figures/BNN_1.png"></img>
 Coding exercise based on the theory shown in [Variational Inference for Neural Networks](https://www.cs.toronto.edu/~graves/nips_2011.pdf), implementing a simple Bayesian NN.
 <br/><br/>
 
